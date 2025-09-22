@@ -1,4 +1,3 @@
-
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -22,8 +21,7 @@ export default async function handler(req, res) {
     const hashrate = parseInt(match[1]);
 
     if (payment.payment_status === "finished" || payment.payment_status === "confirmed") {
-      // ⚠️ For demo: update the *first* user (better: pass customer_id in metadata)
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("users")
         .update({ hashrate_balance: supabase.raw(`hashrate_balance + ${hashrate}`) })
         .limit(1);
@@ -33,7 +31,7 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: "Database update failed" });
       }
 
-      return res.status(200).json({ message: "Hashrate updated", data });
+      return res.status(200).json({ message: "Hashrate updated" });
     }
 
     return res.status(200).json({ message: "Payment pending" });
