@@ -50,7 +50,7 @@ export default function Home() {
           });
           const data = await res.json();
           if (data.invoice_url) {
-            window.location.href = data.invoice_url; // redirect to NOWPayments checkout
+            window.location.href = data.invoice_url;
           } else {
             alert("Error creating payment");
           }
