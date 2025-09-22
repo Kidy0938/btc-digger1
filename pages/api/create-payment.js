@@ -1,4 +1,3 @@
-// pages/api/create-payment.js
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -11,7 +10,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.NOWPAYMENTS_API_KEY, // add this in Vercel env
+        "x-api-key": process.env.NOWPAYMENTS_API_KEY,
       },
       body: JSON.stringify({
         price_amount: price,
@@ -19,7 +18,7 @@ export default async function handler(req, res) {
         pay_currency: "usdttrc20",
         order_id: `btc_digger_${hashrate}TH_${Date.now()}`,
         order_description: `BTC Digger Package: ${hashrate} TH/s for ${price} USDT`,
-        ipn_callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ipn`, // where NOWPayments will send IPN
+        ipn_callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ipn`,
       }),
     });
 
