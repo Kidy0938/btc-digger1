@@ -1,64 +1,82 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import Auth from "../components/Auth";
+import { useState } from "react";
 
 export default function Home() {
-  const [session, setSession] = useState(null);
-  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    return () => listener.subscription.unsubscribe();
-  }, []);
+  const packages = [
+    { hashrate: 1, price: 5 },
+    { hashrate: 5, price: 20 },
+    { hashrate: 10, price: 40 },
+    { hashrate: 20, price: 70 },
+    { hashrate: 50, price: 120 },
+    { hashrate: 100, price: 150 },
+    { hashrate: 150, price: 170 },
+    { hashrate: 200, price: 180 },
+  ];
 
-  useEffect(() => {
-    if (session?.user) {
-      fetchUserData(session.user.id);
+  const handleBuy = async (hashrate, price) => {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hashrate, price }),
+      });
+
+      const data = await res.json();
+
+      if (data.invoice_url) {
+        window.location.href = data.invoice_url; // Redirect to NOWPayments checkout
+      } else {
+        setMessage("❌ Payment failed, please try again.");
+      }
+    } catch (error) {
+      setMessage("⚠️ Error connecting to payment server.");
     }
-  }, [session]);
 
-  const fetchUserData = async (userId) => {
-    const { data, error } = await supabase
-      .from("users")
-      .select("email, hashrate_balance")
-      .eq("id", userId)
-      .single();
-    if (!error) setUserData(data);
+    setLoading(false);
   };
 
-  if (!session) return <Auth />;
-
   return (
-    <div className="p-6">
-      <h1 className="text-xl">BTC Digger Dashboard</h1>
-      {userData && (
-        <p className="mt-4">
-          Welcome <b>{userData.email}</b> <br />
-          Your Hashrate Balance: <b>{userData.hashrate_balance} TH/s</b>
-        </p>
-      )}
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h1>💎 BTC Digger Packages</h1>
+      <p>Select your hash rate and pay in USDT (TRC20)</p>
 
-      <button
-        onClick={async () => {
-          const res = await fetch("/api/create-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ hashrate: 5, price: 180 }),
-          });
-          const data = await res.json();
-          if (data.invoice_url) {
-            window.location.href = data.invoice_url;
-          } else {
-            alert("Error creating payment");
-          }
-        }}
-        className="mt-6 bg-green-600 text-white px-4 py-2 rounded"
-      >
-        Buy 5 TH/s → 180 USDT
-      </button>
+      <div style={{ display: "grid", gap: "15px", marginTop: "20px" }}>
+        {packages.map((pkg, i) => (
+          <div
+            key={i}
+            style={{
+              border: "1px solid #ccc",
+              padding: "15px",
+              borderRadius: "10px",
+              background: "#f9f9f9",
+            }}
+          >
+            <h3>{pkg.hashrate} TH/s</h3>
+            <p>Price: {pkg.price} USDT</p>
+            <button
+              onClick={() => handleBuy(pkg.hashrate, pkg.price)}
+              disabled={loading}
+              style={{
+                padding: "10px 20px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#0070f3",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              {loading ? "Processing..." : "Buy Now"}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {message && <p style={{ marginTop: "20px", color: "red" }}>{message}</p>}
     </div>
   );
 }
