@@ -3,29 +3,34 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  try {
-    const { hashrate, price } = req.body;
+  const { hashrate, price } = req.body;
 
-    const response = await fetch("https://api.nowpayments.io/v1/payment", {
+  try {
+    const response = await fetch("https://api.nowpayments.io/v1/invoice", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "x-api-key": process.env.NOWPAYMENTS_API_KEY,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         price_amount: price,
-        price_currency: "usdt",
-        pay_currency: "usdttrc20",
+        price_currency: "usdttrc20", // User pays with USDT TRC20
         order_id: `btc_digger_${hashrate}TH_${Date.now()}`,
         order_description: `BTC Digger Package: ${hashrate} TH/s for ${price} USDT`,
-        ipn_callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ipn`,
+        ipn_callback_url: process.env.NOWPAYMENTS_IPN_URL, // Set this in Vercel env vars
+        success_url: "https://yourdomain.com/success",
+        cancel_url: "https://yourdomain.com/cancel",
       }),
     });
 
     const data = await response.json();
-    return res.status(200).json(data);
-  } catch (error) {
-    console.error("NOWPayments error:", error);
-    return res.status(500).json({ error: "Payment creation failed" });
+
+    if (data.invoice_url) {
+      res.status(200).json({ url: data.invoice_url });
+    } else {
+      res.status(400).json({ error: "Failed to create payment", details: data });
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 }
