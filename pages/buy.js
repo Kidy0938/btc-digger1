@@ -21,22 +21,34 @@ export default function BuyPage() {
       } else {
         alert("Error creating payment. Try again.");
       }
-
     } catch (err) {
       console.error("Error creating order:", err);
       alert("Something went wrong. Please try again.");
     }
   }
 
+  function handleCancel() {
+    // Redirect user back to home page or any page you want
+    window.location.href = "/";
+  }
+
   return (
     <div style={{ padding: "20px", textAlign: "center" }}>
       <h1>Buy BTC Mining Package</h1>
-      <button
-        onClick={handleBuy}
-        style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer" }}
-      >
-        Buy Now
-      </button>
+      <div style={{ marginTop: "20px" }}>
+        <button
+          onClick={handleBuy}
+          style={{ padding: "10px 20px", fontSize: "16px", marginRight: "10px", cursor: "pointer" }}
+        >
+          Buy Now
+        </button>
+        <button
+          onClick={handleCancel}
+          style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer" }}
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
